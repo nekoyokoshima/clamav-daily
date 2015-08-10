@@ -2,15 +2,17 @@
 # written by Tomas Nevar (tomas@lisenet.com)
 # 17/01/2014 (dd/mm/yy)
 # copyleft free software
+# changes to email program, multiple folders by Keith Goodlip 10/08/2014
 #
 LOGFILE="/var/log/clamav/clamav-$(date +'%Y-%m-%d').log";
 EMAIL_MSG="Please see the log file attached.";
 EMAIL_FROM="clamav-daily@example.com";
 EMAIL_TO="admin@example.com";
-DIRTOSCAN="/home";
+EMAIl_PROG="mailx"
+DIRTOSCAN=("/home" "/etc" "/bin" "/sbin" "/usr" "/boot" "/root" );
 
 # Check for mail installation
-type mail >/dev/null 2>&1 || { echo >&2 "I require mail but it's not installed. Aborting."; exit 1; };
+type $EMAIL_PROG >/dev/null 2>&1 || { echo >&2 "I require mail but it's not installed. Aborting."; exit 1; };
 
 # Update ClamAV database
 echo "Looking for ClamAV database updates...";
@@ -23,9 +25,15 @@ if [ "$TODAY" == "6" ];then
 	# be nice to others while scanning the entire root
 	nice -n5 clamscan -ri / --exclude-dir=/sys/ &>"$LOGFILE";
 else
-	DIRSIZE=$(du -sh "$DIRTOSCAN"  2>/dev/null|cut -f1);
-	echo -e "Starting a daily scan of "$DIRTOSCAN" directory.\nAmount of data to be scanned is "$DIRSIZE".";
-	clamscan -ri "$DIRTOSCAN" &>"$LOGFILE";
+	echo -e "Starting a daily scan.\n\n"&>"$LOGFILE";
+
+	for CURR_DIR in ${DIRTOSCAN[@]}
+	do
+		echo "Scanning $CURR_DIR"&>>"$LOGFILE";
+		DIRSIZE=$(du -sh "$CURR_DIR"  2>/dev/null|cut -f1);
+		echo -e "Starting a daily scan of "$CURR_DIR" directory.\nAmount of data to be scanned is "$DIRSIZE".";
+		clamscan -ri "$CURR_DIR" &>>"$LOGFILE";
+	done
 fi
 
 # get the value of "Infected lines"
@@ -33,7 +41,7 @@ MALWARE=$(tail "$LOGFILE"|grep Infected|cut -d" " -f3);
 
 # if the value is not equal to zero, send an email with the log file attached
 if [ "$MALWARE" -ne "0" ]; then
-	echo "$EMAIL_MSG"|mail -a "$LOGFILE" -s "ClamAV: Malware Found" -r "$EMAIL_FROM" "$EMAIL_TO";
+	echo "$EMAIL_MSG"|mailx -a "$LOGFILE" -s "ClamAV: Malware Found" -r "$EMAIL_FROM" "$EMAIL_TO";
 fi
 
 echo "The script has finished.";
