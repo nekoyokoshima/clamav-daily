@@ -5,16 +5,16 @@ ClamAV is an open source (GPL) antivirus engine designed for detecting Trojans, 
 
 The script scans pre-defined system locations depending on the day of the week and sends an email notification with a ClamAV log attached if any malware has been found.
 
-# Installation on Debian Wheezy
+# Installation on CentOS 6.x (Will possibly work on 7 but it is untested yet)
 
 The following packages are used by the script:
  
 * ClamAV
-* Heirloom-mailx
+* mail/mailx depending on what you choose
  
 To install:
 
-<pre># apt-get install clamav clamav-freshclam heirloom-mailx</pre>
+<pre># yum install clamav clamd mailx</pre>
 
 # Configuration
 
