@@ -21,19 +21,20 @@ freshclam --quiet;
 TODAY=$(date +%u);
 
 if [ "$TODAY" == "6" ];then
-	echo "Starting a full weekend scan.";
-	# be nice to others while scanning the entire root
-	nice -n5 clamscan -ri / --exclude-dir=/sys/ &>"$LOGFILE";
+        echo "Starting a full weekend scan.";
+        # be nice to others while scanning the entire root
+        nice -n5 clamscan -ri / --exclude-dir=/sys/ &>"$LOGFILE";
 else
-	echo -e "Starting a daily scan.\n\n"&>"$LOGFILE";
+        echo -e "Starting the daily scan.\n"&>"$LOGFILE";
 
-	for CURR_DIR in ${DIRTOSCAN[@]}
-	do
-		echo "Scanning $CURR_DIR"&>>"$LOGFILE";
-		DIRSIZE=$(du -sh "$CURR_DIR"  2>/dev/null|cut -f1);
-		echo -e "Starting a daily scan of "$CURR_DIR" directory.\nAmount of data to be scanned is "$DIRSIZE".";
-		clamscan -ri "$CURR_DIR" &>>"$LOGFILE";
-	done
+        for CURR_DIR in ${DIRTOSCAN[@]}
+        do
+                echo "Scanning $CURR_DIR"&>>"$LOGFILE";
+                DIRSIZE=$(du -sh "$CURR_DIR"  2>/dev/null|cut -f1);
+                echo -e "Starting a daily scan of "$CURR_DIR" directory.\nAmount of data to be scanned is "$DIRSIZE".";
+                clamscan -ri "$CURR_DIR" &>>"$LOGFILE";
+                echo -e "Finished scanning $CURR_DIR\n"&>>"$LOGFILE";
+        done
 fi
 
 # get the value of "Infected lines"
@@ -41,7 +42,7 @@ MALWARE=$(tail "$LOGFILE"|grep Infected|cut -d" " -f3);
 
 # if the value is not equal to zero, send an email with the log file attached
 if [ "$MALWARE" -ne "0" ]; then
-	echo "$EMAIL_MSG"|mailx -a "$LOGFILE" -s "ClamAV: Malware Found" -r "$EMAIL_FROM" "$EMAIL_TO";
+        echo "$EMAIL_MSG"|$EMAIl_PROG -a "$LOGFILE" -s "ClamAV: Malware Found" -r "$EMAIL_FROM" "$EMAIL_TO";
 fi
 
 echo "The script has finished.";
