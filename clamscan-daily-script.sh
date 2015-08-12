@@ -37,13 +37,10 @@ else
         done
 fi
 
-# get the value of "Infected lines"
-MALWARE=$(tail "$LOGFILE"|grep Infected|cut -d" " -f3);
-
 # if the value is not equal to zero, send an email with the log file attached
-if [ "$MALWARE" -ne "0" ]; then
+if [[ $(grep Infected $LOGFILE | awk {'print $3'} | grep -v 0) -ne 0 ]]; then
         echo "$EMAIL_MSG"|$EMAIl_PROG -a "$LOGFILE" -s "ClamAV: Malware Found" -r "$EMAIL_FROM" "$EMAIL_TO";
 fi
 
-echo "The script has finished.";
+echo "The script has finished." &>>"$LOGFILE";
 exit 0;
